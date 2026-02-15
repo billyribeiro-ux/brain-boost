@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /exercise/
+Disallow: /coach/
+Disallow: /trading/
+Disallow: /profile/
+Sitemap: https://brainboostelite.com/sitemap.xml
