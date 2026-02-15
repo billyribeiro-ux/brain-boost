@@ -1,9 +1,16 @@
 use crate::errors::Result;
+use crate::middleware::auth::AuthUser;
 use crate::models::user::{AuthResponse, CreateUserRequest, LoginRequest};
 use crate::services::auth_service;
-use axum::{extract::State, Json};
+use axum::{extract::State, Extension, Json};
+use serde::Deserialize;
 use sqlx::PgPool;
 use validator::Validate;
+
+#[derive(Deserialize)]
+pub struct RefreshRequest {
+    pub refresh_token: String,
+}
 
 pub async fn register(
     State(pool): State<PgPool>,
@@ -29,15 +36,17 @@ pub async fn login(
 
 pub async fn refresh(
     State(pool): State<PgPool>,
-) -> Result<Json<serde_json::Value>> {
-    Ok(Json(serde_json::json!({
-        "message": "Token refresh endpoint - to be implemented with refresh token validation"
-    })))
+    Json(req): Json<RefreshRequest>,
+) -> Result<Json<AuthResponse>> {
+    let response = auth_service::refresh_token(&pool, &req.refresh_token).await?;
+    Ok(Json(response))
 }
 
 pub async fn logout(
     State(pool): State<PgPool>,
+    Extension(auth_user): Extension<AuthUser>,
 ) -> Result<Json<serde_json::Value>> {
+    auth_service::logout_user(&pool, auth_user.user_id).await?;
     Ok(Json(serde_json::json!({
         "message": "Logged out successfully"
     })))

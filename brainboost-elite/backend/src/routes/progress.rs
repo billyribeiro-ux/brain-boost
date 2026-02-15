@@ -25,7 +25,8 @@ pub async fn advance_day(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
 ) -> Result<Json<serde_json::Value>> {
+    progress_service::advance_day(&pool, auth_user.user_id).await?;
     Ok(Json(serde_json::json!({
-        "message": "Day advanced successfully - full implementation pending"
+        "message": "Day advanced successfully"
     })))
 }

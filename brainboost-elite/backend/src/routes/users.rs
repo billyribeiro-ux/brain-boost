@@ -1,6 +1,6 @@
-use crate::errors::Result;
+use crate::errors::{AppError, Result};
 use crate::middleware::auth::AuthUser;
-use crate::models::user::{UpdateProfileRequest, UpdateScheduleRequest, UserResponse, UserSchedule};
+use crate::models::user::{UpdateUserRequest, UserResponse, UserSchedule, UpdateScheduleRequest};
 use crate::services::auth_service;
 use axum::{extract::State, Extension, Json};
 use sqlx::PgPool;
@@ -16,59 +16,52 @@ pub async fn get_me(
 pub async fn update_me(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
-    Json(req): Json<UpdateProfileRequest>,
+    Json(req): Json<UpdateUserRequest>,
 ) -> Result<Json<UserResponse>> {
-    let mut updates = vec![];
-    let mut values: Vec<String> = vec![];
-    let mut param_count = 1;
-
-    if let Some(display_name) = req.display_name {
-        updates.push(format!("display_name = ${}", param_count));
-        values.push(display_name);
-        param_count += 1;
+    if let Some(ref email) = req.email {
+        if !email.contains('@') {
+            return Err(AppError::ValidationError("Invalid email format".to_string()));
+        }
     }
-
-    if let Some(avatar_url) = req.avatar_url {
-        updates.push(format!("avatar_url = ${}", param_count));
-        values.push(avatar_url);
-        param_count += 1;
+    
+    if let Some(ref chronotype) = req.chronotype {
+        if !["morning", "evening", "flexible"].contains(&chronotype.as_str()) {
+            return Err(AppError::ValidationError("Invalid chronotype".to_string()));
+        }
     }
-
-    if let Some(chronotype) = req.chronotype {
-        updates.push(format!("chronotype = ${}", param_count));
-        values.push(chronotype);
-        param_count += 1;
+    
+    if let Some(ref goal) = req.primary_goal {
+        let valid_goals = ["focus", "memory", "creativity", "longevity", "performance", "recovery"];
+        if !valid_goals.contains(&goal.as_str()) {
+            return Err(AppError::ValidationError("Invalid primary goal".to_string()));
+        }
     }
+    
+    let user = sqlx::query_as!(
+        UserResponse,
+        r#"
+        UPDATE users
+        SET display_name = COALESCE($1, display_name),
+            avatar_url = COALESCE($2, avatar_url),
+            chronotype = COALESCE($3, chronotype),
+            primary_goal = COALESCE($4, primary_goal),
+            timezone = COALESCE($5, timezone),
+            updated_at = NOW()
+        WHERE id = $6
+        RETURNING id, email, display_name, avatar_url, subscription, status, 
+                  chronotype, primary_goal, timezone, created_at, updated_at
+        "#,
+        req.display_name,
+        req.avatar_url,
+        req.chronotype,
+        req.primary_goal,
+        req.timezone,
+        auth_user.user_id
+    )
+    .fetch_one(&pool)
+    .await?;
 
-    if let Some(primary_goal) = req.primary_goal {
-        updates.push(format!("primary_goal = ${}", param_count));
-        values.push(primary_goal);
-        param_count += 1;
-    }
-
-    if let Some(timezone) = req.timezone {
-        updates.push(format!("timezone = ${}", param_count));
-        values.push(timezone);
-        param_count += 1;
-    }
-
-    updates.push("updated_at = NOW()".to_string());
-
-    let query = format!(
-        "UPDATE users SET {} WHERE id = ${} RETURNING *",
-        updates.join(", "),
-        param_count
-    );
-
-    let mut query_builder = sqlx::query_as::<_, crate::models::user::User>(&query);
-    for value in values {
-        query_builder = query_builder.bind(value);
-    }
-    query_builder = query_builder.bind(auth_user.user_id);
-
-    let user = query_builder.fetch_one(&pool).await?;
-
-    Ok(Json(user.into()))
+    Ok(Json(user))
 }
 
 pub async fn get_schedule(

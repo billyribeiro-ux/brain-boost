@@ -1,8 +1,9 @@
 pub mod auth;
-pub mod users;
-pub mod exercises;
-pub mod progress;
-pub mod metrics;
-pub mod trading;
 pub mod coach;
+pub mod exercises;
 pub mod health;
+pub mod learning;
+pub mod metrics;
+pub mod progress;
+pub mod trading;
+pub mod users;
