@@ -57,11 +57,11 @@ pub async fn check_daily_completion(pool: &PgPool, user_id: Uuid, date: chrono::
         r#"
         SELECT COUNT(*)
         FROM daily_sessions
-        WHERE user_id = $1 AND day_date = $2 AND status = 'completed'
-        "#,
-        user_id,
-        date
+        WHERE user_id = $1 AND session_date = $2 AND status = 'completed'
+        "#
     )
+    .bind(user_id)
+    .bind(date)
     .fetch_one(pool)
     .await?;
     

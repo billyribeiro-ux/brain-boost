@@ -90,10 +90,10 @@ pub async fn calculate_stress_index(pool: &PgPool, user_id: Uuid, date: NaiveDat
         r#"
         SELECT COUNT(*) FROM daily_sessions
         WHERE user_id = $1 AND day_date = $2 AND status = 'missed'
-        "#,
-        user_id,
-        date
+        "#
     )
+    .bind(user_id)
+    .bind(date)
     .fetch_one(pool)
     .await?;
     
@@ -116,11 +116,11 @@ pub async fn calculate_longevity_score(pool: &PgPool, user_id: Uuid) -> Result<f
         AND DATE(completed_at) >= $2 
         AND DATE(completed_at) <= $3
         AND exercise_type IN ('exercise_light', 'exercise_brisk', 'hiit')
-        "#,
-        user_id,
-        start_date,
-        end_date
+        "#
     )
+    .bind(user_id)
+    .bind(start_date)
+    .bind(end_date)
     .fetch_one(pool)
     .await?
     .unwrap_or(0);
@@ -130,11 +130,11 @@ pub async fn calculate_longevity_score(pool: &PgPool, user_id: Uuid) -> Result<f
         SELECT AVG(sleep_quality)
         FROM daily_metrics
         WHERE user_id = $1 AND metric_date >= $2 AND metric_date <= $3
-        "#,
-        user_id,
-        start_date,
-        end_date
+        "#
     )
+    .bind(user_id)
+    .bind(start_date)
+    .bind(end_date)
     .fetch_one(pool)
     .await?
     .unwrap_or(5.0);
@@ -144,11 +144,11 @@ pub async fn calculate_longevity_score(pool: &PgPool, user_id: Uuid) -> Result<f
         SELECT AVG(brain_score)
         FROM daily_metrics
         WHERE user_id = $1 AND metric_date >= $2 AND metric_date <= $3
-        "#,
-        user_id,
-        start_date,
-        end_date
+        "#
     )
+    .bind(user_id)
+    .bind(start_date)
+    .bind(end_date)
     .fetch_one(pool)
     .await?
     .unwrap_or(50.0);
@@ -187,11 +187,11 @@ pub async fn calculate_longevity_score(pool: &PgPool, user_id: Uuid) -> Result<f
         AND DATE(completed_at) >= $2 
         AND DATE(completed_at) <= $3
         AND exercise_type = 'diet_log'
-        "#,
-        user_id,
-        start_date,
-        end_date
+        "#
     )
+    .bind(user_id)
+    .bind(start_date)
+    .bind(end_date)
     .fetch_one(pool)
     .await?;
     
@@ -229,11 +229,11 @@ pub async fn calculate_streak(pool: &PgPool, user_id: Uuid) -> Result<i32> {
             r#"
             SELECT COUNT(*)
             FROM daily_sessions
-            WHERE user_id = $1 AND day_date = $2 AND status = 'completed'
-            "#,
-            user_id,
-            current_date
+            WHERE user_id = $1 AND session_date = $2 AND status = 'completed'
+            "#
         )
+        .bind(user_id)
+        .bind(current_date)
         .fetch_one(pool)
         .await?;
         
@@ -241,11 +241,11 @@ pub async fn calculate_streak(pool: &PgPool, user_id: Uuid) -> Result<i32> {
             r#"
             SELECT COUNT(*)
             FROM daily_sessions
-            WHERE user_id = $1 AND day_date = $2
-            "#,
-            user_id,
-            current_date
+            WHERE user_id = $1 AND session_date = $2
+            "#
         )
+        .bind(user_id)
+        .bind(current_date)
         .fetch_one(pool)
         .await?;
         
