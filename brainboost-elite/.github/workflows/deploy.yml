@@ -1,0 +1,35 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-backend:
+    name: Deploy Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        working-directory: backend
+        run: docker build -t brainboost-backend:${{ github.sha }} .
+      - name: Push to container registry
+        run: |
+          echo "Push to your container registry (ghcr.io, ECR, GCR, etc.)"
+          echo "Then deploy to Fly.io / Railway / ECS / Cloud Run"
+          # Example for Fly.io:
+          # flyctl deploy --image brainboost-backend:${{ github.sha }}
+
+  deploy-frontend:
+    name: Deploy Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: frontend

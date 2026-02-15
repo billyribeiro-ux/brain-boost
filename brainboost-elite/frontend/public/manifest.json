@@ -1,0 +1,25 @@
+{
+  "name": "BrainBoost Elite",
+  "short_name": "BrainBoost",
+  "description": "Advanced cognitive training — 36 weeks to genius-level performance",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#121212",
+  "background_color": "#121212",
+  "icons": [
+    { "src": "/icons/brain-72.png", "sizes": "72x72", "type": "image/png" },
+    { "src": "/icons/brain-96.png", "sizes": "96x96", "type": "image/png" },
+    { "src": "/icons/brain-128.png", "sizes": "128x128", "type": "image/png" },
+    { "src": "/icons/brain-144.png", "sizes": "144x144", "type": "image/png" },
+    { "src": "/icons/brain-152.png", "sizes": "152x152", "type": "image/png" },
+    { "src": "/icons/brain-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/brain-384.png", "sizes": "384x384", "type": "image/png" },
+    { "src": "/icons/brain-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["health", "education", "productivity"],
+  "screenshots": [
+    { "src": "/screenshots/dashboard.png", "sizes": "390x844", "type": "image/png", "label": "Dashboard" },
+    { "src": "/screenshots/exercise.png", "sizes": "390x844", "type": "image/png", "label": "Exercise" }
+  ]
+}
