@@ -52,9 +52,9 @@ pub async fn get_today_exercises(
             session_id: session.id,
             slot: session.slot.clone(),
             status: session.status.clone(),
-            level_number: session.level_number,
-            week_number: session.week_number,
-            day_number: session.day_number,
+            level_number: session.level_number as i32,
+            week_number: session.week_number as i32,
+            day_number: session.day_number as i32,
             exercises,
         });
     }

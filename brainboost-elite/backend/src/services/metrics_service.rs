@@ -66,7 +66,7 @@ pub async fn calculate_stress_index(pool: &PgPool, user_id: Uuid, date: NaiveDat
         if let Some(hrv) = m.hrv_score {
             let normalized_hrv = (hrv / 100.0) * 100.0;
             let sleep_component = (100.0 - (m.sleep_quality.unwrap_or(5.0) * 10.0)) * 0.3;
-            let stress_index = ((100.0 - normalized_hrv) * 0.5) + sleep_component + 20.0;
+            let stress_index: f64 = ((100.0 - normalized_hrv) * 0.5) + sleep_component + 20.0;
             return Ok(stress_index.min(100.0).max(0.0));
         }
     }

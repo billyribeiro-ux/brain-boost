@@ -106,3 +106,15 @@ pub struct UpdateScheduleRequest {
     pub notification_enabled: Option<bool>,
     pub haptic_enabled: Option<bool>,
 }
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct UpdateUserRequest {
+    #[validate(email)]
+    pub email: Option<String>,
+    #[validate(length(min = 1, max = 100))]
+    pub display_name: Option<String>,
+    pub avatar_url: Option<String>,
+    pub chronotype: Option<String>,
+    pub primary_goal: Option<String>,
+    pub timezone: Option<String>,
+}

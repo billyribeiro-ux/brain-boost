@@ -25,13 +25,14 @@ pub async fn update_me(
     }
     
     if let Some(ref chronotype) = req.chronotype {
-        if !["morning", "evening", "flexible"].contains(&chronotype.as_str()) {
+        let valid_chronotypes: &[&str] = &["morning", "evening", "flexible"];
+        if !valid_chronotypes.contains(&chronotype.as_str()) {
             return Err(AppError::ValidationError("Invalid chronotype".to_string()));
         }
     }
     
     if let Some(ref goal) = req.primary_goal {
-        let valid_goals = ["focus", "memory", "creativity", "longevity", "performance", "recovery"];
+        let valid_goals: &[&str] = &["focus", "memory", "creativity", "longevity", "performance", "recovery"];
         if !valid_goals.contains(&goal.as_str()) {
             return Err(AppError::ValidationError("Invalid primary goal".to_string()));
         }
