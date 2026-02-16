@@ -1,4 +1,4 @@
-use crate::errors::{AppError, Result};
+use crate::errors::Result;
 use chrono::{Duration, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
@@ -143,10 +143,9 @@ pub async fn create_learning_topic(
     
     let now = Utc::now().naive_utc();
     let mut lessons = Vec::new();
-    let mut next_scheduled = now;
-    
+
     let intervals = vec![0, 1, 24, 72, 120, 192, 312, 504];
-    
+
     for (i, (title, content, duration)) in curriculum.iter().enumerate() {
         let lesson_id = Uuid::new_v4();
         let hours_offset = if i < intervals.len() {
@@ -154,8 +153,8 @@ pub async fn create_learning_topic(
         } else {
             intervals.last().unwrap() + (i - intervals.len() + 1) as i64 * 312
         };
-        
-        next_scheduled = now + Duration::hours(hours_offset);
+
+        let next_scheduled = now + Duration::hours(hours_offset);
         
         sqlx::query(
             r#"
@@ -229,9 +228,9 @@ pub async fn get_user_topics(pool: &PgPool, user_id: Uuid) -> Result<Vec<Learnin
             user_id: topic.user_id,
             topic_name: topic.topic_name,
             description: topic.description,
-            mastery_percentage: topic.mastery_percentage,
-            estimated_mastery_days: topic.estimated_mastery_days,
-            created_at: topic.created_at,
+            mastery_percentage: topic.mastery_percentage.to_string().parse::<f64>().unwrap_or(0.0),
+            estimated_mastery_days: topic.estimated_mastery_days.unwrap_or(30),
+            created_at: topic.created_at.naive_utc(),
             lessons,
         });
     }
@@ -264,7 +263,7 @@ pub async fn get_next_lesson(pool: &PgPool, user_id: Uuid) -> Result<Option<Micr
 
 pub async fn complete_lesson(
     pool: &PgPool,
-    user_id: Uuid,
+    _user_id: Uuid,
     lesson_id: Uuid,
     score: f64,
 ) -> Result<MicroLesson> {
@@ -339,7 +338,7 @@ pub async fn complete_lesson(
 
 pub async fn get_mastery_prediction(
     pool: &PgPool,
-    user_id: Uuid,
+    _user_id: Uuid,
     topic_id: Uuid,
 ) -> Result<MasteryPrediction> {
     let stats = sqlx::query!(
@@ -359,8 +358,10 @@ pub async fn get_mastery_prediction(
     let total = stats.total.unwrap_or(0) as i32;
     let completed = stats.completed_count.unwrap_or(0) as i32;
     let remaining = total - completed;
-    let avg_score = stats.avg_score.unwrap_or(75.0);
-    
+    let avg_score = stats.avg_score
+        .map(|bd| bd.to_string().parse::<f64>().unwrap_or(75.0))
+        .unwrap_or(75.0);
+
     let pace = if avg_score >= 90.0 { "ahead" } else if avg_score >= 75.0 { "on_track" } else { "behind" };
     let days_per_lesson = if avg_score >= 90.0 { 2 } else if avg_score >= 75.0 { 3 } else { 4 };
     let estimated_days_remaining = remaining * days_per_lesson;

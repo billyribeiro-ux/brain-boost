@@ -1,5 +1,5 @@
 use crate::config::Config;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::cors::CorsLayer;
 use axum::http::{HeaderValue, header};
 
 pub fn cors_layer() -> CorsLayer {

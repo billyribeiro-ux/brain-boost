@@ -3,7 +3,6 @@ use axum::{
     routing::{get, post, patch, put},
     Router,
 };
-use sqlx::postgres::PgPoolOptions;
 use std::net::SocketAddr;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};

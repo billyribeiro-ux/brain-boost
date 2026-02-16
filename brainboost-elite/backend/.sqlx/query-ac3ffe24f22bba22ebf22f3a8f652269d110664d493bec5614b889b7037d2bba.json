@@ -1,0 +1,93 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE users\n        SET display_name = COALESCE($1, display_name),\n            avatar_url = COALESCE($2, avatar_url),\n            chronotype = COALESCE($3, chronotype),\n            primary_goal = COALESCE($4, primary_goal),\n            timezone = COALESCE($5, timezone),\n            updated_at = NOW()\n        WHERE id = $6\n        RETURNING id, email, display_name, avatar_url, subscription::text as \"subscription!\",\n                  status::text as \"status!\", chronotype, primary_goal, timezone,\n                  onboarding_completed, created_at, updated_at\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "email",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "display_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "avatar_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "subscription!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "status!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "chronotype",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "primary_goal",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 8,
+        "name": "timezone",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 9,
+        "name": "onboarding_completed",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      null,
+      null,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "ac3ffe24f22bba22ebf22f3a8f652269d110664d493bec5614b889b7037d2bba"
+}

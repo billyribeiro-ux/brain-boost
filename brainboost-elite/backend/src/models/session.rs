@@ -2,6 +2,7 @@ use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
+use validator::Validate;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Flashcard {
@@ -79,7 +80,8 @@ pub struct CoachMessage {
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Validate)]
 pub struct SendMessageRequest {
+    #[validate(length(min = 1, max = 5000))]
     pub content: String,
 }

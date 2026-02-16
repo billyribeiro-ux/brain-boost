@@ -1,6 +1,6 @@
 use crate::errors::Result;
 use crate::middleware::auth::AuthUser;
-use crate::models::metrics::{MetricsResponse, MetricsTrendResponse};
+use crate::models::metrics::MetricsResponse;
 use crate::services::metrics_service;
 use axum::{extract::{Query, State}, Extension, Json};
 use serde::Deserialize;
@@ -72,8 +72,13 @@ pub async fn get_brain_score(
     .fetch_one(&pool)
     .await?;
     
-    let avg_accuracy = exercise_stats.avg_accuracy.unwrap_or(0.0);
-    let avg_focus = (exercise_stats.avg_focus.unwrap_or(0.0) / 10.0) * 100.0;
+    let avg_accuracy = exercise_stats.avg_accuracy
+        .map(|bd| bd.to_string().parse::<f64>().unwrap_or(0.0))
+        .unwrap_or(0.0);
+    let avg_focus_raw = exercise_stats.avg_focus
+        .map(|bd| bd.to_string().parse::<f64>().unwrap_or(0.0))
+        .unwrap_or(0.0);
+    let avg_focus = (avg_focus_raw / 10.0) * 100.0;
     let stress_index = metrics_service::calculate_stress_index(&pool, auth_user.user_id, today).await?;
     
     Ok(Json(serde_json::json!({

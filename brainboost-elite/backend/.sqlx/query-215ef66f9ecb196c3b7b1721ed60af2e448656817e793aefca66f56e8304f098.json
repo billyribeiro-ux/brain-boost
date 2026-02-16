@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT level_number, grace_skips_used\n        FROM user_levels\n        WHERE user_id = $1 AND status = 'active'\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "level_number",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 1,
+        "name": "grace_skips_used",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "215ef66f9ecb196c3b7b1721ed60af2e448656817e793aefca66f56e8304f098"
+}

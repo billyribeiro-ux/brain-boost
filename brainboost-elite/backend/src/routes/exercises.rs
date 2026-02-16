@@ -6,6 +6,7 @@ use axum::{extract::{Path, Query, State}, Extension, Json};
 use serde::Deserialize;
 use sqlx::PgPool;
 use uuid::Uuid;
+use validator::Validate;
 
 #[derive(Deserialize)]
 pub struct HistoryQuery {
@@ -67,9 +68,12 @@ pub async fn get_today_exercises(
 pub async fn complete_exercise(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
-    Path(session_id): Path<Uuid>,
+    Path(_session_id): Path<Uuid>,
     Json(req): Json<CompleteExerciseRequest>,
 ) -> Result<Json<ExerciseCompletion>> {
+    req.validate()
+        .map_err(|e| crate::errors::AppError::ValidationError(e.to_string()))?;
+
     let completion = exercise_service::complete_exercise(&pool, auth_user.user_id, req).await?;
     Ok(Json(completion))
 }

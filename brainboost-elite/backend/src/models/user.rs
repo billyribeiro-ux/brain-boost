@@ -28,10 +28,13 @@ pub struct UserResponse {
     pub display_name: String,
     pub avatar_url: Option<String>,
     pub subscription: String,
+    pub status: String,
     pub chronotype: Option<String>,
     pub primary_goal: Option<String>,
+    pub timezone: String,
     pub onboarding_completed: bool,
     pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 }
 
 impl From<User> for UserResponse {
@@ -42,10 +45,13 @@ impl From<User> for UserResponse {
             display_name: user.display_name,
             avatar_url: user.avatar_url,
             subscription: user.subscription,
+            status: user.status,
             chronotype: user.chronotype,
             primary_goal: user.primary_goal,
+            timezone: user.timezone,
             onboarding_completed: user.onboarding_completed,
             created_at: user.created_at,
+            updated_at: user.updated_at,
         }
     }
 }

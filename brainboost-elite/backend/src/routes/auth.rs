@@ -7,8 +7,9 @@ use serde::Deserialize;
 use sqlx::PgPool;
 use validator::Validate;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Validate)]
 pub struct RefreshRequest {
+    #[validate(length(min = 1, max = 500))]
     pub refresh_token: String,
 }
 
@@ -38,6 +39,9 @@ pub async fn refresh(
     State(pool): State<PgPool>,
     Json(req): Json<RefreshRequest>,
 ) -> Result<Json<AuthResponse>> {
+    req.validate()
+        .map_err(|e| crate::errors::AppError::ValidationError(e.to_string()))?;
+
     let response = auth_service::refresh_token(&pool, &req.refresh_token).await?;
     Ok(Json(response))
 }

@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use sqlx::FromRow;
 use uuid::Uuid;
+use validator::Validate;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct ExerciseCompletion {
@@ -20,14 +21,20 @@ pub struct ExerciseCompletion {
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Validate)]
 pub struct CompleteExerciseRequest {
     pub session_id: Uuid,
+    #[validate(length(min = 1, max = 100))]
     pub exercise_type: String,
+    #[validate(length(min = 1, max = 200))]
     pub exercise_name: String,
+    #[validate(range(min = 1, max = 7200))]
     pub duration_seconds: i32,
+    #[validate(range(min = 0.0, max = 100.0))]
     pub accuracy_score: Option<f64>,
+    #[validate(range(min = 1, max = 10))]
     pub focus_rating: Option<i16>,
+    #[validate(range(min = 1, max = 10))]
     pub difficulty_level: Option<i16>,
     pub metadata: Option<JsonValue>,
 }

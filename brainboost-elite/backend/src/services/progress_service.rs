@@ -68,7 +68,7 @@ pub async fn check_daily_completion(pool: &PgPool, user_id: Uuid, date: chrono::
     Ok(completed == 3)
 }
 
-pub async fn calculate_compliance(pool: &PgPool, user_id: Uuid, level_number: i32) -> Result<f64> {
+pub async fn calculate_compliance(pool: &PgPool, user_id: Uuid, level_number: i16) -> Result<f64> {
     let stats = sqlx::query!(
         r#"
         SELECT 
@@ -117,7 +117,6 @@ pub async fn advance_day(pool: &PgPool, user_id: Uuid) -> Result<()> {
     
     let mut new_day = current_level.current_day + 1;
     let mut new_week = current_level.current_week;
-    let mut new_level = current_level.level_number;
     let mut level_completed = false;
     
     if new_day > 7 {
@@ -144,10 +143,10 @@ pub async fn advance_day(pool: &PgPool, user_id: Uuid) -> Result<()> {
             .await?;
             
             if current_level.level_number < 6 {
-                new_level = current_level.level_number + 1;
+                let new_level = current_level.level_number + 1;
                 new_week = 1;
                 new_day = 1;
-                
+
                 sqlx::query(
                     r#"
                     UPDATE user_levels
@@ -211,7 +210,7 @@ pub async fn handle_missed_day(pool: &PgPool, user_id: Uuid) -> Result<()> {
     .fetch_one(pool)
     .await?;
     
-    let grace_skips_used = current_level.grace_skips_used + 1;
+    let grace_skips_used = current_level.grace_skips_used.unwrap_or(0) + 1;
     
     if grace_skips_used > 3 {
         sqlx::query(

@@ -4,7 +4,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 pub async fn send_message(pool: &PgPool, user_id: Uuid, req: SendMessageRequest) -> Result<CoachMessage> {
-    let user_message = sqlx::query_as::<_, CoachMessage>(
+    let _user_message = sqlx::query_as::<_, CoachMessage>(
         r#"
         INSERT INTO coach_messages (user_id, role, content)
         VALUES ($1, 'user', $2)

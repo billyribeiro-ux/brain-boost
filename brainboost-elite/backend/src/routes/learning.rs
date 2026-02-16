@@ -8,15 +8,19 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use uuid::Uuid;
+use validator::Validate;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Validate)]
 pub struct CreateTopicRequest {
+    #[validate(length(min = 1, max = 200))]
     pub topic_name: String,
+    #[validate(length(max = 2000))]
     pub description: Option<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Validate)]
 pub struct CompleteLessonRequest {
+    #[validate(range(min = 0.0, max = 100.0))]
     pub score: f64,
 }
 
@@ -36,6 +40,9 @@ pub async fn create_topic(
     Extension(auth_user): Extension<AuthUser>,
     Json(req): Json<CreateTopicRequest>,
 ) -> Result<Json<hyper_learning_service::LearningTopic>> {
+    req.validate()
+        .map_err(|e| crate::errors::AppError::ValidationError(e.to_string()))?;
+
     let topic = hyper_learning_service::create_learning_topic(
         &pool,
         auth_user.user_id,
@@ -43,7 +50,7 @@ pub async fn create_topic(
         req.description,
     )
     .await?;
-    
+
     Ok(Json(topic))
 }
 
@@ -86,6 +93,9 @@ pub async fn complete_lesson(
     Path(lesson_id): Path<Uuid>,
     Json(req): Json<CompleteLessonRequest>,
 ) -> Result<Json<hyper_learning_service::MicroLesson>> {
+    req.validate()
+        .map_err(|e| crate::errors::AppError::ValidationError(e.to_string()))?;
+
     let lesson = hyper_learning_service::complete_lesson(
         &pool,
         auth_user.user_id,
@@ -93,7 +103,7 @@ pub async fn complete_lesson(
         req.score,
     )
     .await?;
-    
+
     Ok(Json(lesson))
 }
 

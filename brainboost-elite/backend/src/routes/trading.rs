@@ -15,8 +15,8 @@ pub async fn start_trading(
 }
 
 pub async fn make_decision(
-    State(pool): State<PgPool>,
-    Extension(auth_user): Extension<AuthUser>,
+    State(_pool): State<PgPool>,
+    Extension(_auth_user): Extension<AuthUser>,
 ) -> Result<Json<serde_json::Value>> {
     Ok(Json(serde_json::json!({
         "message": "Trading decision recorded - full implementation pending"
@@ -32,8 +32,8 @@ pub async fn get_trading_history(
 }
 
 pub async fn get_trading_stats(
-    State(pool): State<PgPool>,
-    Extension(auth_user): Extension<AuthUser>,
+    State(_pool): State<PgPool>,
+    Extension(_auth_user): Extension<AuthUser>,
 ) -> Result<Json<TradingStatsResponse>> {
     Ok(Json(TradingStatsResponse {
         total_sessions: 0,

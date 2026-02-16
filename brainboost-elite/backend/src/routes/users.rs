@@ -49,8 +49,9 @@ pub async fn update_me(
             timezone = COALESCE($5, timezone),
             updated_at = NOW()
         WHERE id = $6
-        RETURNING id, email, display_name, avatar_url, subscription, status, 
-                  chronotype, primary_goal, timezone, created_at, updated_at
+        RETURNING id, email, display_name, avatar_url, subscription::text as "subscription!",
+                  status::text as "status!", chronotype, primary_goal, timezone,
+                  onboarding_completed, created_at, updated_at
         "#,
         req.display_name,
         req.avatar_url,

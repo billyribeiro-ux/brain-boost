@@ -2,7 +2,6 @@ use crate::errors::{AppError, Result};
 use crate::utils::jwt::decode_token;
 use axum::{
     extract::Request,
-    http::StatusCode,
     middleware::Next,
     response::Response,
 };

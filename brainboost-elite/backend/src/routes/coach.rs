@@ -4,12 +4,16 @@ use crate::models::session::{CoachMessage, SendMessageRequest};
 use crate::services::{coach_service, stress_shield_service};
 use axum::{extract::State, Extension, Json};
 use sqlx::PgPool;
+use validator::Validate;
 
 pub async fn send_message(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
     Json(req): Json<SendMessageRequest>,
 ) -> Result<Json<CoachMessage>> {
+    req.validate()
+        .map_err(|e| crate::errors::AppError::ValidationError(e.to_string()))?;
+
     let message = coach_service::send_message(&pool, auth_user.user_id, req).await?;
     Ok(Json(message))
 }

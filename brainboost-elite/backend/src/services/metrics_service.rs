@@ -36,8 +36,13 @@ pub async fn calculate_brain_score(pool: &PgPool, user_id: Uuid, date: NaiveDate
     .fetch_one(pool)
     .await?;
     
-    let avg_accuracy = exercise_stats.avg_accuracy.unwrap_or(0.0);
-    let avg_focus = (exercise_stats.avg_focus.unwrap_or(0.0) / 10.0) * 100.0;
+    let avg_accuracy = exercise_stats.avg_accuracy
+        .map(|bd| bd.to_string().parse::<f64>().unwrap_or(0.0))
+        .unwrap_or(0.0);
+    let avg_focus_raw = exercise_stats.avg_focus
+        .map(|bd| bd.to_string().parse::<f64>().unwrap_or(0.0))
+        .unwrap_or(0.0);
+    let avg_focus = (avg_focus_raw / 10.0) * 100.0;
     
     let stress_index = calculate_stress_index(pool, user_id, date).await?;
     
@@ -52,7 +57,7 @@ pub async fn calculate_brain_score(pool: &PgPool, user_id: Uuid, date: NaiveDate
 pub async fn calculate_stress_index(pool: &PgPool, user_id: Uuid, date: NaiveDate) -> Result<f64> {
     let metrics = sqlx::query!(
         r#"
-        SELECT sleep_quality, hrv_score
+        SELECT sleep_quality, hrv_reading
         FROM daily_metrics
         WHERE user_id = $1 AND metric_date = $2
         "#,
@@ -62,15 +67,17 @@ pub async fn calculate_stress_index(pool: &PgPool, user_id: Uuid, date: NaiveDat
     .fetch_optional(pool)
     .await?;
     
-    if let Some(m) = metrics {
-        if let Some(hrv) = m.hrv_score {
-            let normalized_hrv = (hrv / 100.0) * 100.0;
-            let sleep_component = (100.0 - (m.sleep_quality.unwrap_or(5.0) * 10.0)) * 0.3;
+    if let Some(ref m) = metrics {
+        if let Some(ref hrv) = m.hrv_reading {
+            let hrv_f64 = hrv.to_string().parse::<f64>().unwrap_or(50.0);
+            let normalized_hrv = (hrv_f64 / 100.0) * 100.0;
+            let sleep_quality_f64 = m.sleep_quality.map(|s| s as f64).unwrap_or(5.0);
+            let sleep_component = (100.0 - (sleep_quality_f64 * 10.0)) * 0.3;
             let stress_index: f64 = ((100.0 - normalized_hrv) * 0.5) + sleep_component + 20.0;
             return Ok(stress_index.min(100.0).max(0.0));
         }
     }
-    
+
     let exercise_stats = sqlx::query!(
         r#"
         SELECT AVG(focus_rating) as avg_focus
@@ -82,9 +89,11 @@ pub async fn calculate_stress_index(pool: &PgPool, user_id: Uuid, date: NaiveDat
     )
     .fetch_one(pool)
     .await?;
-    
-    let avg_focus = exercise_stats.avg_focus.unwrap_or(5.0);
-    let sleep_quality = metrics.and_then(|m| m.sleep_quality).unwrap_or(5.0);
+
+    let avg_focus = exercise_stats.avg_focus
+        .map(|bd| bd.to_string().parse::<f64>().unwrap_or(5.0))
+        .unwrap_or(5.0);
+    let sleep_quality = metrics.as_ref().and_then(|m| m.sleep_quality).map(|s| s as f64).unwrap_or(5.0);
     
     let missed_sessions = sqlx::query_scalar::<_, i64>(
         r#"

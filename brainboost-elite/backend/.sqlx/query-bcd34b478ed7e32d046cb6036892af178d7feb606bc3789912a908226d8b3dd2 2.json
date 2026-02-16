@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT AVG(focus_rating) as avg_focus\n        FROM exercise_completions\n        WHERE user_id = $1 AND DATE(completed_at) = $2\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "avg_focus",
+        "type_info": "Numeric"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Date"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "bcd34b478ed7e32d046cb6036892af178d7feb606bc3789912a908226d8b3dd2"
+}

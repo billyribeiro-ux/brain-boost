@@ -1,7 +1,7 @@
-use crate::errors::{AppError, Result};
+use crate::errors::Result;
 use crate::models::exercise::{CompleteExerciseRequest, ExerciseCompletion};
 use crate::models::progress::DailySession;
-use chrono::{NaiveDate, Utc};
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -477,7 +477,7 @@ fn get_level_3_plan(week: u8, slot: &str) -> Vec<PlannedExercise> {
     }
 }
 
-fn get_level_4_plan(week: u8, slot: &str) -> Vec<PlannedExercise> {
+fn get_level_4_plan(_week: u8, slot: &str) -> Vec<PlannedExercise> {
     match slot {
         "morning" => {
             vec![
@@ -556,7 +556,7 @@ fn get_level_4_plan(week: u8, slot: &str) -> Vec<PlannedExercise> {
     }
 }
 
-fn get_level_5_plan(week: u8, slot: &str) -> Vec<PlannedExercise> {
+fn get_level_5_plan(_week: u8, slot: &str) -> Vec<PlannedExercise> {
     match slot {
         "morning" => {
             vec![
@@ -635,7 +635,7 @@ fn get_level_5_plan(week: u8, slot: &str) -> Vec<PlannedExercise> {
     }
 }
 
-fn get_level_6_plan(week: u8, slot: &str) -> Vec<PlannedExercise> {
+fn get_level_6_plan(_week: u8, slot: &str) -> Vec<PlannedExercise> {
     match slot {
         "morning" => {
             vec![

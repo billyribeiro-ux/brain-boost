@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT sleep_quality, hrv_reading\n        FROM daily_metrics\n        WHERE user_id = $1 AND metric_date = $2\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "sleep_quality",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 1,
+        "name": "hrv_reading",
+        "type_info": "Numeric"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Date"
+      ]
+    },
+    "nullable": [
+      true,
+      true
+    ]
+  },
+  "hash": "817a83a510fabd31f22fc8b8d2e75ad8f6b8128715b3817796fbfd13db777272"
+}
