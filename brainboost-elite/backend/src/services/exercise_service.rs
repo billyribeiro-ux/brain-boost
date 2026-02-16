@@ -1,4 +1,4 @@
-use crate::errors::Result;
+use crate::errors::{AppError, Result};
 use crate::models::exercise::{CompleteExerciseRequest, ExerciseCompletion};
 use crate::models::progress::DailySession;
 use chrono::Utc;
@@ -762,8 +762,21 @@ pub async fn get_today_sessions(pool: &PgPool, user_id: Uuid) -> Result<Vec<Dail
 }
 
 pub async fn complete_exercise(pool: &PgPool, user_id: Uuid, req: CompleteExerciseRequest) -> Result<ExerciseCompletion> {
+    // IDOR Protection: Verify session belongs to user
+    let session_check = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(SELECT 1 FROM daily_sessions WHERE id = $1 AND user_id = $2)"
+    )
+    .bind(req.session_id)
+    .bind(user_id)
+    .fetch_one(pool)
+    .await?;
+
+    if !session_check {
+        return Err(AppError::NotFound("Session not found or access denied".to_string()));
+    }
+
     let metadata = req.metadata.unwrap_or(serde_json::json!({}));
-    
+
     let completion = sqlx::query_as::<_, ExerciseCompletion>(
         r#"
         INSERT INTO exercise_completions 

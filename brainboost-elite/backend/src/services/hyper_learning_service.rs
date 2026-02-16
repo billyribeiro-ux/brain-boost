@@ -1,4 +1,4 @@
-use crate::errors::Result;
+use crate::errors::{AppError, Result};
 use chrono::{Duration, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
@@ -213,16 +213,31 @@ pub async fn get_user_topics(pool: &PgPool, user_id: Uuid) -> Result<Vec<Learnin
     .fetch_all(pool)
     .await?;
     
-    let mut result = Vec::new();
-    
-    for topic in topics {
-        let lessons = sqlx::query_as::<_, MicroLesson>(
-            "SELECT * FROM micro_lessons WHERE topic_id = $1 ORDER BY lesson_number"
+    // Optimization: Fetch all lessons in one query to avoid N+1 problem
+    let topic_ids: Vec<Uuid> = topics.iter().map(|t| t.id).collect();
+
+    let all_lessons = if !topic_ids.is_empty() {
+        sqlx::query_as::<_, MicroLesson>(
+            "SELECT * FROM micro_lessons WHERE topic_id = ANY($1) ORDER BY topic_id, lesson_number"
         )
-        .bind(topic.id)
+        .bind(&topic_ids)
         .fetch_all(pool)
-        .await?;
-        
+        .await?
+    } else {
+        Vec::new()
+    };
+
+    // Group lessons by topic_id
+    let mut lessons_by_topic: HashMap<Uuid, Vec<MicroLesson>> = HashMap::new();
+    for lesson in all_lessons {
+        lessons_by_topic.entry(lesson.topic_id).or_insert_with(Vec::new).push(lesson);
+    }
+
+    let mut result = Vec::new();
+
+    for topic in topics {
+        let lessons = lessons_by_topic.remove(&topic.id).unwrap_or_default();
+
         result.push(LearningTopic {
             id: topic.id,
             user_id: topic.user_id,
@@ -234,7 +249,7 @@ pub async fn get_user_topics(pool: &PgPool, user_id: Uuid) -> Result<Vec<Learnin
             lessons,
         });
     }
-    
+
     Ok(result)
 }
 
@@ -263,12 +278,27 @@ pub async fn get_next_lesson(pool: &PgPool, user_id: Uuid) -> Result<Option<Micr
 
 pub async fn complete_lesson(
     pool: &PgPool,
-    _user_id: Uuid,
+    user_id: Uuid,
     lesson_id: Uuid,
     score: f64,
 ) -> Result<MicroLesson> {
     let now = Utc::now().naive_utc();
-    
+
+    // IDOR Protection: Verify lesson belongs to user
+    let _lesson = sqlx::query_as::<_, MicroLesson>(
+        r#"
+        SELECT ml.* FROM micro_lessons ml
+        JOIN learning_topics lt ON ml.topic_id = lt.id
+        WHERE ml.id = $1 AND lt.user_id = $2
+        "#
+    )
+    .bind(lesson_id)
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await?
+    .ok_or_else(|| AppError::NotFound("Lesson not found or access denied".to_string()))?;
+
+    // Update the lesson
     let lesson = sqlx::query_as::<_, MicroLesson>(
         "SELECT * FROM micro_lessons WHERE id = $1"
     )
@@ -338,12 +368,25 @@ pub async fn complete_lesson(
 
 pub async fn get_mastery_prediction(
     pool: &PgPool,
-    _user_id: Uuid,
+    user_id: Uuid,
     topic_id: Uuid,
 ) -> Result<MasteryPrediction> {
+    // IDOR Protection: Verify topic belongs to user
+    let topic_check = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(SELECT 1 FROM learning_topics WHERE id = $1 AND user_id = $2)"
+    )
+    .bind(topic_id)
+    .bind(user_id)
+    .fetch_one(pool)
+    .await?;
+
+    if !topic_check {
+        return Err(AppError::NotFound("Topic not found or access denied".to_string()));
+    }
+
     let stats = sqlx::query!(
         r#"
-        SELECT 
+        SELECT
             COUNT(*) as total,
             COUNT(CASE WHEN completed THEN 1 END) as completed_count,
             AVG(CASE WHEN completed THEN score END) as avg_score

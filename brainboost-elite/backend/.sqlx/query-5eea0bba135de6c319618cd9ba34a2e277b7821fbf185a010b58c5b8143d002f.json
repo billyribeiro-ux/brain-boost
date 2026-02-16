@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT \n            COUNT(*) as total,\n            COUNT(CASE WHEN completed THEN 1 END) as completed_count,\n            AVG(CASE WHEN completed THEN score END) as avg_score\n        FROM micro_lessons\n        WHERE topic_id = $1\n        ",
+  "query": "\n        SELECT\n            COUNT(*) as total,\n            COUNT(CASE WHEN completed THEN 1 END) as completed_count,\n            AVG(CASE WHEN completed THEN score END) as avg_score\n        FROM micro_lessons\n        WHERE topic_id = $1\n        ",
   "describe": {
     "columns": [
       {
@@ -30,5 +30,5 @@
       null
     ]
   },
-  "hash": "5e9af67cd7a9de1d5aea33b5ee9fdcfb105eb2362a8866f25981bb56e6c6bb42"
+  "hash": "5eea0bba135de6c319618cd9ba34a2e277b7821fbf185a010b58c5b8143d002f"
 }
